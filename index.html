@@ -1,0 +1,156 @@
+<html>
+<head>
+<style type="text/css">
+body * {
+  font-family: Helvetica, sans-serif;
+}
+table {
+  margin: 10% auto;
+  border-spacing: 0;
+  border-collapse: collapse;
+}
+td {
+  width: 20px;
+  padding: 0;
+  text-align: center;
+  cursor: default;
+}
+a {
+  text-align: center;
+  display: table-cell;
+  text-decoration: none;
+  color: inherit;
+}
+a:hover .link-text {
+  color: #90a;
+}
+
+a:hover td {
+  cursor: pointer;
+}
+td.highlight, tr.highlight a {
+  color: #90a;
+}
+</style>
+</head>
+
+<body><table id="grid"></table></body>
+
+<script type="text/javascript">
+entries = [
+  '',
+  '',
+  'noah tye|http://noahtye.com',
+  'bricoleur|http://www.bricoleur.org/2002/10/why-bricoleur.html',
+  'at kite|http://kite.com',
+  '',
+  'twitter|http://twitter.com/noahlt',
+  'github|http://github.com/noahlt',
+  'email|mailto://noah@tyes.us',
+  '',
+  '',
+].map(function(entry) {
+  var parts = entry.split('|');
+  return {
+    text: parts[0].toUpperCase(),
+    url: parts[1],
+  };
+});
+
+function randChar() {
+  var range = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  return range[randInt(range.length)];
+}
+
+function randInt(n) {
+  return Math.floor(Math.random() * n);
+}
+
+function repeat(pattern, count) {
+    if (count < 1) return '';
+    var result = '';
+    while (count > 1) {
+        if (count & 1) result += pattern;
+        count >>= 1, pattern += pattern;
+    }
+    return result + pattern;
+}
+
+COLUMNS = 20;
+SWAP_DELAY = 50;
+MAX_SWAPS = 20;
+LEFT_MARGIN = 3;
+X = '.';
+
+function makeSwapper(elt, finalChar) {
+  return function() {
+    elt.dataset.remainingSwaps--;
+    if (elt.dataset.remainingSwaps > 0) {
+      elt.textContent = randChar();
+      window.setTimeout(makeSwapper(elt, finalChar), SWAP_DELAY);
+    } else if (elt.dataset.remainingSwaps <= 0) {
+      elt.textContent = finalChar;
+      if (elt.tagName == 'A') {
+        if (finalChar == ' ') {
+          elt.textContent = X;
+        }
+        elt.className = 'link-text';
+      }
+    }
+  };
+}
+
+scrambleCallbacks = [];
+
+function scramble() {
+  var t1 = Date.now();
+  scrambleCallbacks.forEach(function(callback) {
+    clearTimeout(callback);
+  });
+  var t2 = Date.now();
+  console.log('time to clear callbacks', t2 - t1);
+  grid = document.getElementById('grid');
+  grid.innerHTML = '';
+  entries.map(function(entry, i) {
+    var tr = document.createElement('tr');
+    var rowString = repeat(X, LEFT_MARGIN) +
+                    entry.text +
+                    repeat(X, COLUMNS - entry.text.length - LEFT_MARGIN);
+    rowString.split('').map(function(finalChar) {
+      var td;
+      if (entry.url && finalChar != X) {
+        td = document.createElement('a');
+        td.href = entry.url;
+        td.addEventListener('mouseenter', function(evt) {
+          evt.target.parentElement.classList.add('highlight');
+        });
+        td.addEventListener('mouseleave', function(evt) {
+          evt.target.parentElement.classList.remove('highlight');
+        });
+      } else {
+        td = document.createElement('td');
+        td.addEventListener('click', function(evt) {
+          scramble();
+        });
+      }
+      td.textContent = randChar();
+      td.dataset.remainingSwaps = randInt(MAX_SWAPS);
+      if (finalChar == X) {
+        td.addEventListener('mouseenter', function(evt) {
+          window.setTimeout(makeSwapper(evt.target, finalChar), SWAP_DELAY);
+          evt.target.dataset.remainingSwaps = Infinity;
+        });
+        td.addEventListener('mouseleave', function(evt) {
+          evt.target.dataset.remainingSwaps = randInt(MAX_SWAPS);
+        });
+      }
+      tr.appendChild(td);
+      scrambleCallbacks.push(window.setTimeout(makeSwapper(td, finalChar), SWAP_DELAY));
+    });
+    grid.appendChild(tr);
+  });
+}
+
+scramble();
+</script>
+</html>
