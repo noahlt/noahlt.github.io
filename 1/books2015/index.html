@@ -39,6 +39,22 @@
   top: 1.4em;
   left: 0;
 }
+
+@media only screen and (max-device-width: 480px) {
+  #header {
+    width: 400px;
+    font-size: 60px;
+    position: absolute;
+    top: 50px;
+    left: 50px; /* This is a hack. Such a hack. But I don't care anymore. */
+    margin-left: 0;
+  }
+
+  #content {
+    margin-top: 0;
+  }
+}
+
 #content {
   width: 500px;
   margin: 250px auto 0;
